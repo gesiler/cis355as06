@@ -23,9 +23,6 @@ function main() {
 
     // echo html head section
     echo '<html>';
-    echo '<head>';
-    echo '	<link rel="icon" href="img/cardinal_logo.png" type="image/png" />';
-    echo '</head>';
 
     // open html body section
     echo '<body>';
@@ -44,19 +41,19 @@ function main() {
     }
 
     // if user entered something in a search box, then call printCourses() to filter 
-    if ($_GET['prefix'] != "" || $_GET['courseNumber'] != "" || $_GET['instructor'] != "") {
-        printCourses($_GET['prefix'], $_GET['courseNumber'], $_GET['instructor']);
+    if ($_GET['prefix'] != "" || $_GET['courseNumber'] != "" || $_GET['instructor'] != "" || $_GET['day' != ""]) {
+        printCourses($_GET['prefix'], $_GET['courseNumber'], $_GET['instructor'], $_GET['day']);
     }
     // otherwise call printSemester() for all courses for each semester
     else {
         echo "<h3>Spring</h3>";
-        printSemester("18/SP");
+        printSemester("19/SP");
         echo "<h3>Summer</h3>";
-        printSemester("18/SU");
+        printSemester("19/SU");
         echo "<h3>Fall</h3>";
-        printSemester("18/FA");
+        printSemester("19/FA");
         echo "<h3>Winter</h3>";
-        printSemester("19/WI");
+        printSemester("20/WI");
     }
 
     // display the entry form for next search
@@ -70,61 +67,31 @@ function main() {
 }
 
 #-----------------------------------------------------------------------------
-// display the entry form for next search
-
-function printForm() {
-
-    echo '<br />';
-    echo '<br />';
-    echo '<h2>Course Lookup</h2>';
-
-    // print user entry form
-    echo "<form action='courses.php'>";
-    echo "Course Prefix (Department)<br/>";
-    echo "<input type='text' placeholder='CS' name='prefix'><br/>";
-    echo "Course Number<br/>";
-    echo "<input type='text' placeholder='116' name='courseNumber'><br/>";
-    echo "Instructor<br/>";
-    echo "<input type='text' placeholder='gpcorser' name='instructor'><br/>";
-    //echo "Building/Room<br/>";
-    //echo "<input type='text' name='building'>";
-    //echo "<input type='text' name='room'><br/>";
-    echo "<input type='submit' value='Submit'>";
-    echo "</form>";
-}
-
-#-----------------------------------------------------------------------------
 // print all courses for a given filter
 
-function printCourses($prefix, $courseNumber, $instructor) {
+function printCourses($prefix, $courseNumber, $instructor, $day) {
 
     // call printListing() for each semester using all parameters
-    /*
-      $term = "18/WI";
-      $string ="https://api.svsu.edu/courses?prefix=$prefix&courseNumber=$courseNumber&term=$term&instructor=$instructor";
-      echo "<h3>2018 - Winter</h3>";
-      printListing($string);
-     */
 
-    $term = "18/SP";
+    $term = "19/SP";
     $string = "https://api.svsu.edu/courses?prefix=$prefix&courseNumber=$courseNumber&term=$term&instructor=$instructor";
-    echo "<h3>2018 - Spring</h3>";
-    printListing($string);
+    echo "<h3>2019 - Spring</h3>";
+    printListing($string, $day);
 
-    $term = "18/SU";
+    $term = "19/SU";
     $string = "https://api.svsu.edu/courses?prefix=$prefix&courseNumber=$courseNumber&term=$term&instructor=$instructor";
-    echo "<h3>2018 - Summer</h3>";
-    printListing($string);
+    echo "<h3>2019 - Summer</h3>";
+    printListing($string, $day);
 
-    $term = "18/FA";
+    $term = "19/FA";
     $string = "https://api.svsu.edu/courses?prefix=$prefix&courseNumber=$courseNumber&term=$term&instructor=$instructor";
-    echo "<h3>2018 - Fall</h3>";
-    printListing($string);
+    echo "<h3>2019 - Fall</h3>";
+    printListing($string, $day);
 
-    $term = "19/WI";
+    $term = "20/WI";
     $string = "https://api.svsu.edu/courses?prefix=$prefix&courseNumber=$courseNumber&term=$term&instructor=$instructor";
     echo "<h3>2019 - Winter</h3>";
-    printListing($string);
+    printListing($string, $day);
 }
 
 #-----------------------------------------------------------------------------
@@ -135,15 +102,15 @@ function printSemester($term) {
     // note: printSemester() is only called when user has not entered anything in entry form
     // print all CIS courses for semester
     $string = "https://api.svsu.edu/courses?prefix=CIS&term=$term";
-    printListing($string);
+    printListing($string, $day);
 
     // print all CS courses for semester
     $string = "https://api.svsu.edu/courses?prefix=CS&term=$term";
-    printListing($string);
+    printListing($string, $day);
 
     // print all CSIS courses for semester
     $string = "https://api.svsu.edu/courses?prefix=CSIS&term=$term";
-    printListing($string);
+    printListing($string, $day);
 
     // print all CSIS-related MATH courses for semester
     // $string ="https://api.svsu.edu/courses?prefix=MATH&courseNumber=103&term=$term";
@@ -165,7 +132,7 @@ function printSemester($term) {
 #-----------------------------------------------------------------------------
 // print an html table for one single query of the api
 
-function printListing($apiCall) {
+function printListing($apiCall, $day) {
 
     $json = curl_get_contents($apiCall);
     // $json = curl_get_contents("https://api.svsu.edu/courses?prefix=CIS&term=16/SP");
@@ -177,85 +144,119 @@ function printListing($apiCall) {
 
         echo "<table border='3' width='100%'>";
 
-        foreach ($obj->courses as $course) {
-
-            $building = strtoupper(trim($_GET['building']));
-            $buildingMatch = false;
-            $thisBuilding0 = trim($course->meetingTimes[0]->building);
-            $thisBuilding1 = trim($course->meetingTimes[1]->building);
-            if ($building && ($thisBuilding0 == $building || $thisBuilding1 == $building))
-                $buildingMatch = true;
-            if (!($building))
-                $buildingMatch = true;
-            if (!$buildingMatch)
-                continue;
-
-            $room = strtoupper(trim($_GET['room']));
-            $roomMatch = false;
-            $thisroom0 = trim($course->meetingTimes[0]->room);
-            $thisroom1 = trim($course->meetingTimes[1]->room);
-            if ($room && ($thisroom0 == $room || $thisroom1 == $room))
-                $roomMatch = true;
-            if (!($room))
-                $roomMatch = true;
-            if (!$roomMatch)
-                continue;
-
-            // different <tr bgcolor=...> for each professor
-            switch ($course->meetingTimes[0]->instructor) {
-                case "james":            // 1
-                    $printline = "<tr bgcolor='#B19CD9'>";  // pastel purple
-                    break;
-                case "icho":             // 2
-                    $printline = "<tr bgcolor='lightblue'>";  // light blue
-                    break;
-                case "krahman":           // 3 
-                    $printline = "<tr bgcolor='pink'>";  // pink
-                    break;
-                case "gpcorser":           // 4
-                    $printline = "<tr bgcolor='yellow'>";   // yellow
-                    break;
-                case "pdharam":           // 5
-                    $printline = "<tr bgcolor='#77DD77'>";  // pastel green (light green)
-                    break;
-                case "amulahuw":           // 6
-                    $printline = "<tr bgcolor='#FFB347'>";  // pastel orange
-                    break;
-                default:
-                    $printline = "<tr>"; // no background color
-            }
-
-            $printline .= "<td width='13%'>" . $course->prefix . " " . $course->courseNumber . "*" . $course->section . "</td>";
-            $printline .= "<td width='40%'>" . $course->title . " (" . $course->lineNumber . ")" . "</td>";
-            $printline .= "<td width='12%'>Av:" . $course->seatsAvailable . " (" . $course->capacity . ")" . "</td>";
-
-            // print day and time column
-            if ($course->meetingTimes[0]->days) {
-                $printline .= "<td width='15%'>" . $course->meetingTimes[0]->days . " " . $course->meetingTimes[0]->startTime;
-                // $printline .= . "<br /> " . $course->meetingTimes[1]->days . " " . $course->meetingTimes[1]->startTime ;
-                $printline .= "</td>";
+        if (!$day) {
+            $days = array('M', 'MW', 'T', 'TR', 'W', 'R', 'F', '', ' ');
+        } else {
+            if (strcasecmp($day, 'M') == 0) {
+                $days = array('M', 'MW');
+            } else if (strcasecmp($day, 'T') == 0) {
+                $days = array('T', 'TR');
+            } else if (strcasecmp($day, 'W') == 0) {
+                $days = array('MW', 'W');
+            } else if (strcasecmp($day, 'R') == 0) {
+                $days = array('TR', 'R');
             } else {
-                $printline .= "<td width='15%'>";
-                $printline .= $course->meetingTimes[1]->days . " " . $course->meetingTimes[1]->startTime . "</td> ";
+                $days = array($day);
             }
+        }
 
-            // print building and room column
-            $printline .= "<td width='10%'>";
-            if (substr($course->section, -2, 1) == "9")
-                $printline .= "(Online)";
-            else
-            if (substr($course->section, -2, 1) == "7")
-                $printline .= $course->meetingTimes[1]->building . " " . $course->meetingTimes[1]->room;
-            else
-                $printline .= $course->meetingTimes[0]->building . " " . $course->meetingTimes[0]->room;
-            $printline .= "</td>";
+        foreach ($days as $day){
 
-            // print instructor column
-            $printline .= "<td width='10%'>" . $course->meetingTimes[0]->instructor . "</td>";
-            $printline .= "</tr>";
-            echo $printline;
-        } // end foreach
+        
+            foreach ($obj->courses as $course) {
 
+                $continue = false;
+                if ($course->meetingTimes[0]->days) {
+                    if (strcasecmp($course->meetingTimes[0]->days, $day) == 0) {
+                        $continue = true;
+                    }
+                } else {
+                    if (strcasecmp($course->meetingTimes[1]->days, $day) == 0) {
+                        $continue = true;
+                    }
+                }
+                if (!$continue) {
+                    continue;
+                }
+/*
+                $building = strtoupper(trim($_GET['building']));
+                $buildingMatch = false;
+                $thisBuilding0 = trim($course->meetingTimes[0]->building);
+                $thisBuilding1 = trim($course->meetingTimes[1]->building);
+                if ($building && ($thisBuilding0 == $building || $thisBuilding1 == $building))
+                    $buildingMatch = true;
+                if (!($building))
+                    $buildingMatch = true;
+                if (!$buildingMatch)
+                    continue;
+
+                $room = strtoupper(trim($_GET['room']));
+                $roomMatch = false;
+                $thisroom0 = trim($course->meetingTimes[0]->room);
+                $thisroom1 = trim($course->meetingTimes[1]->room);
+                if ($room && ($thisroom0 == $room || $thisroom1 == $room))
+                    $roomMatch = true;
+                if (!($room))
+                    $roomMatch = true;
+                if (!$roomMatch)
+                    continue;
+*/
+                // different <tr bgcolor=...> for each professor
+                switch ($course->meetingTimes[0]->instructor) {
+                    case "james":            // 1
+                        $printline = "<tr bgcolor='#B19CD9'>";  // pastel purple
+                        break;
+                    case "icho":             // 2
+                        $printline = "<tr bgcolor='lightblue'>";  // light blue
+                        break;
+                    case "krahman":           // 3 
+                        $printline = "<tr bgcolor='pink'>";  // pink
+                        break;
+                    case "gpcorser":           // 4
+                        $printline = "<tr bgcolor='yellow'>";   // yellow
+                        break;
+                    case "pdharam":           // 5
+                        $printline = "<tr bgcolor='#77DD77'>";  // pastel green (light green)
+                        break;
+                    case "amulahuw":           // 6
+                        $printline = "<tr bgcolor='#FFB347'>";  // pastel orange
+                        break;
+                    default:
+                        $printline = "<tr>"; // no background color
+                }
+
+                $printline .= "<td width='10%'>" . $course->prefix . " " . $course->courseNumber . "*" . $course->section . "</td>";
+                $printline .= "<td width='40%'>" . $course->title . " (" . $course->lineNumber . ")" . "</td>";
+                $ptintline .= "<td width='5%'>" . $course->credit . "</td>";
+                $printline .= "<td width='10%'>Av:" . $course->seatsAvailable . " (" . $course->capacity . ")" . "</td>";
+
+                // print day and time column
+                if ($course->meetingTimes[0]->days) {
+                    $printline .= "<td width='15%'>" . $course->meetingTimes[0]->days . " " . $course->meetingTimes[0]->startTime;
+                    // $printline .= . "<br /> " . $course->meetingTimes[1]->days . " " . $course->meetingTimes[1]->startTime ;
+                    $printline .= "</td>";
+                } else {
+                    $printline .= "<td width='15%'>";
+                    $printline .= $course->meetingTimes[1]->days . " " . $course->meetingTimes[1]->startTime . "</td> ";
+                }
+
+                // print building and room column
+                $printline .= "<td width='10%'>";
+                if (substr($course->section, -2, 1) == "9")
+                    $printline .= "(Online)";
+                else
+                if (substr($course->section, -2, 1) == "7")
+                    $printline .= $course->meetingTimes[1]->building . " " . $course->meetingTimes[1]->room;
+                else
+                    $printline .= $course->meetingTimes[0]->building . " " . $course->meetingTimes[0]->room;
+                $printline .= "</td>";
+
+                // print instructor column
+                $printline .= "<td width='10%'>" . $course->meetingTimes[0]->instructor . "</td>";
+                $printline .= "</tr>";
+                echo $printline;
+            } // end inner foreach
+        } // end outer foreach
         echo "</table>";
         echo "<br/>";
     } // end if (!($obj->courses == null))

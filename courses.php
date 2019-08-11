@@ -227,7 +227,7 @@ function printListing($apiCall, $day) {
 
                 $printline .= "<td width='10%'>" . $course->prefix . " " . $course->courseNumber . "*" . $course->section . "</td>";
                 $printline .= "<td width='40%'>" . $course->title . " (" . $course->lineNumber . ")" . "</td>";
-                $ptintline .= "<td width='5%'>" . $course->credit . "</td>";
+                $printline .= "<td width='5%'>" . $course->credit . "</td>";
                 $printline .= "<td width='10%'>Av:" . $course->seatsAvailable . " (" . $course->capacity . ")" . "</td>";
 
                 // print day and time column
